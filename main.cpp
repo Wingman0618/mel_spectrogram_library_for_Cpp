@@ -2,7 +2,6 @@
 Reference: https://www.youtube.com/watch?v=nl9TZanwbBk
  	   https://www.youtube.com/watch?v=Xw4voABxU5c
 */
-
 #include <iostream>
 #include "dft.h"
 #include "test.h"
@@ -42,7 +41,7 @@ int main(){
 		cout<<abs(dft_complex[i])<<" ";
 	}
 	cout<<endl;
-	
+
 	// add hamming
 	cout<<"Hamming---------------------"<<endl;
 	double *weight = (double*)malloc(size*sizeof(double));
@@ -65,7 +64,7 @@ int main(){
 	double *data = (double*)realloc(y_output, n*sizeof(double));
 
 	for(int i=0; i<n; i++){
-		*(data+i) = float(test_input[i]);
+		*(data+i) = double(test_input[i]);
 	}
 
 	complex<double>* dft_audio = (complex<double>*)realloc(dft_complex, n*sizeof(complex<double>));
@@ -77,9 +76,47 @@ int main(){
 	}
 	cout<<endl;
 
-	free(data);
+	// test stdf
+	cout<<"audio input test (stft)---------------------"<<endl;
+	n = 16000-128;
+	cout<<"size: "<<n<<endl;
+
+	double* new_data = (double*)realloc(data, n*sizeof(double));
+	for(int i=0; i<n; i++){
+		*(new_data+i) = double(test_input[i]);
+        }
+
+	for(int i=0; i<8; i++){
+		cout<<new_data[i]<<" ";
+	}
+	cout<<endl;
+
+	int window_size = 512;
+	int step = 256;
+	int num_of_fft = 60;
+	// double** stft_arr = (double**)malloc(num_of_fft*sizeof(double*));
+
+	double** stft_arr =  stft(new_data, n, window_size, step);
+
+	// print first 5 elements of each fft
+	for(int i=1; i<num_of_fft; i++){
+        	for(int j=0; j<5; j++){
+        	        cout<<*(*(stft_arr+i)+j)<<" ";
+	        }
+		cout<<endl;
+		cout<<"-------------------------"<<endl;
+	}
+
+	// Check the size
+	// cout<<stft_arr[0][511]<<endl;
+	// cout<<stft_arr[59][511]<<endl;
+
+
+
+	free(new_data);
 	free(dft_audio);
 	free(weight);
+	free(stft_arr);
 
 	return 0;
 }

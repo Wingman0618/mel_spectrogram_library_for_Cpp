@@ -13,23 +13,8 @@ std::complex<double>* dft(double* wave, int num_of_inputs){
         for(int i=0; i<n; i++){
                 std::complex<double> c_wave(*(wave+i), 0);
                 *(wave_to_complex+i) = c_wave;
-        }
+	}
 
-/*
-        // Define the omega w
-        // C++ complex implementation tutrial:
-        //  https://www.geeksforgeeks.org/complex-numbers-c-set-1/
-        std::complex<float> c(0., ((-2.*M_PI)/n));
-        std::complex<float> w = exp(c);
-
-        for(int k=0; k<n; k++){
-                std::complex<float> coe(0, 0);
-                for(int j=0; j<n; j++){
-                         coe += wave_to_complex[j]*pow(w,j*k);
-                }
-                *(result+k) = coe;
-        }
-*/
 	result = fft(wave_to_complex, n);
 
         return result;
@@ -90,13 +75,41 @@ double* hamming_data(double* wave, int num_of_inputs){
         for(int i=0; i<num_of_inputs; i++){
                 *(weight+i) = (*(weight+i)-min)/(max-min);
         }
-        
+
 	// weight the data
 	for(int i=0; i<num_of_inputs; i++){
 		*(result+i) = *(wave+i)*weight[i];
 	}
 
         return result;
+}
+
+double** stft(double *wave, int num_of_inputs, int window_size, int step){
+	int num_of_ffts = (num_of_inputs - window_size)/step;
+	// std::cout<<num_of_ffts<<std::endl;
+
+	double** fft_array = (double**)malloc(num_of_ffts*sizeof(double*));
+	for(int i=0; i<num_of_ffts; i++){
+		*(fft_array+i) = (double*)malloc(window_size*sizeof(double));
+	}
+
+	double* window = (double*)malloc(window_size*sizeof(double));
+	std::complex<double>* window_dft = (std::complex<double>*)malloc(window_size*sizeof(std::complex<double>));
+	int pointer = 0;
+
+	for(int i=0; i<num_of_ffts; i++){
+		for(int j=0; j<window_size; j++){
+			*(window+j) = *(wave+pointer+j);
+		}
+		window = hamming_data(window, window_size);
+		pointer += step;
+		window_dft = dft(window, window_size);
+		for(int k=0; k<window_size; k++){
+			*(*(fft_array+i)+k) = abs(*(window_dft+k));
+		}
+	}
+
+	return fft_array;
 }
 
 std::complex<double>* fft(std::complex<double> *wave, int size){
@@ -133,3 +146,4 @@ std::complex<double>* fft(std::complex<double> *wave, int size){
 
 	return freqbins;
 }
+
