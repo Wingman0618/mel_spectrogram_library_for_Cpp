@@ -5,6 +5,7 @@ Reference: https://www.youtube.com/watch?v=nl9TZanwbBk
 
 #include <iostream>
 #include "dft.h"
+#include "test.h"
 
 using namespace std;
 
@@ -14,35 +15,37 @@ int main(){
 
 	float x_input [size] = {0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12., 13., 14., 15.};
 
-	float* y_output = (float*)malloc(size*sizeof(float));
+	double* y_output = (double*)malloc(size*sizeof(double));
 
         for(int i=0; i<size; i++){
                 y_output[i] = sin(x_input[i]);
         }
-	cout<<"basic inputs and outputs: "<<endl;
+	cout<<"basic inputs and outputs---------------------"<<endl;
+	cout<<"inputs: ";
 	for(int i=0; i<size; i++){
 		cout<<x_input[i]<<" ";
 	}
 
 	cout<<endl;
-
+	cout<<"outputs: ";
 	for(int i=0; i<size; i++){
 		cout<<y_output[i]<<" ";
 	}
 
 	cout<<endl;
 
-	complex<float>* dft_complex = (complex<float>*)malloc(size*sizeof(complex<float>));
+	complex<double>* dft_complex = (complex<double>*)malloc(size*sizeof(complex<double>));
 	dft_complex = dft(y_output, size);
 
-	cout<<"DFT without hamming: "<<endl;
+	cout<<"DFT without hamming---------------------"<<endl;
 	for(int i=0; i<size; i++){
 		cout<<abs(dft_complex[i])<<" ";
 	}
 	cout<<endl;
-	cout<<"Hamming: "<<endl;
+	
 	// add hamming
-	float *weight = (float*)malloc(size*sizeof(float));
+	cout<<"Hamming---------------------"<<endl;
+	double *weight = (double*)malloc(size*sizeof(double));
 	weight = hamming(size);
 	for(int i=0; i<size; i++){
 		y_output[i] = y_output[i]*weight[i];
@@ -54,8 +57,28 @@ int main(){
         }
         cout<<endl;
 
-	free(y_output);
-	free(dft_complex);
+	// test audio input
+	cout<<"audio input test---------------------"<<endl;
+	int n = 512;
+	cout<<"size: "<<n<<endl;
+
+	double *data = (double*)realloc(y_output, n*sizeof(double));
+
+	for(int i=0; i<n; i++){
+		*(data+i) = float(test_input[i]);
+	}
+
+	complex<double>* dft_audio = (complex<double>*)realloc(dft_complex, n*sizeof(complex<double>));
+	data = hamming_data(data, n);
+
+	dft_audio = dft(data, n);
+	for(int i=0; i<5; i++){
+		cout<<abs(dft_audio[i])<<" ";
+	}
+	cout<<endl;
+
+	free(data);
+	free(dft_audio);
 	free(weight);
 
 	return 0;
