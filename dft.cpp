@@ -20,6 +20,27 @@ std::complex<double>* dft(double* wave, int num_of_inputs){
         return result;
 }
 
+std::complex<double>* dft_rfft(double* wave, int num_of_inputs){
+        int n = num_of_inputs;
+
+        std::complex<double>* result_fft = (std::complex<double>*)malloc(n*sizeof(std::complex<double>));
+	std::complex<double>* result_rfft = (std::complex<double>*)malloc((n/2)*sizeof(std::complex<double>));
+        std::complex<double>* wave_to_complex = (std::complex<double>*)malloc(n*sizeof(std::complex<double>));
+        for(int i=0; i<n; i++){
+                std::complex<double> c_wave(*(wave+i), 0);
+                *(wave_to_complex+i) = c_wave;
+        }
+
+        result_fft = fft(wave_to_complex, n);
+
+	for(int i=0; i<n/2; i++){
+		*(result_rfft+i) = *(result_fft+i);
+	}
+
+        return result_rfft;
+}
+
+
 double* hamming(int num_of_inputs){
 	double *weight = (double*)malloc(num_of_inputs*sizeof(double));
 
@@ -56,6 +77,7 @@ double* hamming_data(double* wave, int num_of_inputs){
         // Define min and max values for normalising the data
         double max;
         double min;
+
         for(int  i=0; i<num_of_inputs; i++){
                 *(weight+i) = 0.54 - 0.46*cos((2.*M_PI*double(i))/(double(num_of_inputs)-1.));
                 if(i==0){
@@ -70,8 +92,10 @@ double* hamming_data(double* wave, int num_of_inputs){
                                 min = *(weight+i);
                         }
                 }
+
         }
         // Normalise the data
+
         for(int i=0; i<num_of_inputs; i++){
                 *(weight+i) = (*(weight+i)-min)/(max-min);
         }
@@ -86,7 +110,7 @@ double* hamming_data(double* wave, int num_of_inputs){
 
 double** stft(double *wave, int num_of_inputs, int window_size, int step){
 	int num_of_ffts = (num_of_inputs - window_size)/step;
-	// std::cout<<num_of_ffts<<std::endl;
+//	std::cout<<num_of_ffts<<std::endl;
 
 	double** fft_array = (double**)malloc(num_of_ffts*sizeof(double*));
 	for(int i=0; i<num_of_ffts; i++){
@@ -94,7 +118,7 @@ double** stft(double *wave, int num_of_inputs, int window_size, int step){
 	}
 
 	double* window = (double*)malloc(window_size*sizeof(double));
-	std::complex<double>* window_dft = (std::complex<double>*)malloc(window_size*sizeof(std::complex<double>));
+	std::complex<double>* window_dft = (std::complex<double>*)malloc((window_size/2)*sizeof(std::complex<double>));
 	int pointer = 0;
 
 	for(int i=0; i<num_of_ffts; i++){
@@ -103,8 +127,8 @@ double** stft(double *wave, int num_of_inputs, int window_size, int step){
 		}
 		window = hamming_data(window, window_size);
 		pointer += step;
-		window_dft = dft(window, window_size);
-		for(int k=0; k<window_size; k++){
+		window_dft = dft_rfft(window, window_size);
+		for(int k=0; k<window_size/2; k++){
 			*(*(fft_array+i)+k) = abs(*(window_dft+k));
 		}
 	}

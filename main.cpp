@@ -99,7 +99,7 @@ int main(){
 	double** stft_arr =  stft(new_data, n, window_size, step);
 
 	// print first 5 elements of each fft
-	for(int i=1; i<num_of_fft; i++){
+	for(int i=0; i<num_of_fft; i++){
         	for(int j=0; j<5; j++){
         	        cout<<*(*(stft_arr+i)+j)<<" ";
 	        }
