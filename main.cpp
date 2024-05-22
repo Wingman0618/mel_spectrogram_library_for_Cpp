@@ -106,17 +106,33 @@ int main(){
 		cout<<endl;
 		cout<<"-------------------------"<<endl;
 	}
-
 	// Check the size
-	// cout<<stft_arr[0][511]<<endl;
-	// cout<<stft_arr[59][511]<<endl;
+	cout<<stft_arr[59][256]<<endl;
+	cout<<stft_arr[59][257]<<endl;
+	cout<<"-------------------------"<<endl;
 
+	// Check mel spectrogram
+	cout<<"mel spectrogram check: "<<endl;
 
+	double** mel_spectrogram = mel_spec(new_data, n, window_size, step, 40, 16000);
+	for(int i=0; i<num_of_fft; i++){
+		for(int j=0; j<5; j++){
+                	cout<<*(*(mel_spectrogram+i)+j)<<" ";
+		}
+		cout<<endl;
+		cout<<"-------------------------"<<endl;
+        }
+
+        // Check the size
+        cout<<mel_spectrogram[59][39]<<endl;
+        cout<<mel_spectrogram[59][40]<<endl;
+	cout<<"-------------------------"<<endl;
 
 	free(new_data);
 	free(dft_audio);
 	free(weight);
 	free(stft_arr);
+	free(mel_spectrogram);
 
 	return 0;
 }
