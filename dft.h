@@ -15,4 +15,8 @@ double** stft(double *wave, int num_of_inputs, int window_size, int hop_length);
 
 double** mel_spec(double *wave, int num_of_inputs, int window_size, int hop_length, int n_mels, int sample_rate);
 
+double** filterbank_gen(double *filterbin, int n_mels, int n_ffts);
+
+double** power_to_db(double** mel_spec, int num_of_ffts, int n_mels);
+
 std::complex<double>* fft(std::complex<double> *wave, int size);

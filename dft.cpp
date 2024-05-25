@@ -5,6 +5,7 @@ Reference: https://www.youtube.com/watch?v=nl9TZanwbBk
 */
 #include "dft.h"
 #include <iostream>
+#include <cfloat>
 
 std::complex<double>* dft(double* wave, int num_of_inputs){
         int n = num_of_inputs;
@@ -147,9 +148,9 @@ double** mel_spec(double *wave, int num_of_inputs, int window_size, int hop_leng
 		*(mel_spec_arr+i) = (double*)malloc(n_mels*sizeof(double));
 	}
 
-	// Define the upper and lower frequency (20 hz --- samplerate)
-	double lower_freq = 20;
-	double upper_freq = sample_rate;
+	// Define the upper and lower frequency (300 hz --- 8000)
+	double lower_freq = 300;
+	double upper_freq = 8000;
 	// Calculate the mel scale
 	double mel_lower_freq = 1125.*log(1.+lower_freq/700.);
 	double mel_upper_freq = 1125.*log(1.+upper_freq/700.);
@@ -164,15 +165,15 @@ double** mel_spec(double *wave, int num_of_inputs, int window_size, int hop_leng
 	std::cout<<"number of n_fft: "<<n_fft<<std::endl;
 	std::cout<<"number of num_of_ffts: "<<num_of_ffts<<std::endl;
 */
-	//Define filter bank
+	//Define filterbank
 	double mel_value = mel_lower_freq;
-	double* filterbank = (double*)malloc((n_mels+2)*sizeof(double));
+	double* filterbin = (double*)malloc((n_mels+2)*sizeof(double));
 	for(int i=0; i<n_mels+2; i++){
 		// Revert mel scale to hz
 		double mel_to_hz = 700*(exp(mel_value/1125)-1);
 		// Round the frequency
 		double rounding_freq = floor((n_fft*mel_to_hz)/sample_rate);
-		*(filterbank+i) = rounding_freq;
+		*(filterbin+i) = rounding_freq;
 		mel_value += mel_gap;
 	}
 /*
@@ -182,32 +183,81 @@ double** mel_spec(double *wave, int num_of_inputs, int window_size, int hop_leng
 	}
 	std::cout<<std::endl;
 */
+
+
 	// Get the stft array
 	double** stft_arr = stft(wave, num_of_inputs, window_size, hop_length);
 
+	// Get the filterbank
+	double** filterbank = filterbank_gen(filterbin, n_mels, n_fft);
+
 	// Compute the mel spectrogram
 	for(int i=0; i<num_of_ffts; i++){
-		for(int m=1; m<n_mels+1; m++){
-	                double mel_scale = 0.;
-        	        double mel_weight = 0.;
-                	for(int j=0; j<n_fft; j++){
-                        	if(*(*(stft_arr+i)+j) < *(filterbank+m-1)){
-                                	mel_weight = 0;
-                        	}else if(*(*(stft_arr+i)+j)>=*(filterbank+m-1) && *(*(stft_arr+i)+j)<=*(filterbank+m)){
-                                	mel_weight = (*(*(stft_arr+i)+j) - *(filterbank+m-1))/(*(filterbank+m) - *(filterbank+m-1));
-                        	}else if(*(*(stft_arr+i)+j)>=*(filterbank+m) && *(*(stft_arr+i)+j)<=*(filterbank+m+1)){
-                                	mel_weight = (*(filterbank+m+1) - *(*(stft_arr+i)+j))/(*(filterbank+m+1) - *(filterbank+m));
-                        	}else if(*(*(stft_arr+i)+j) > *(filterbank+m+1)){
-                                	mel_weight = 0;
-                        	}
-                        	mel_scale += *(*(stft_arr+i)+j)*mel_weight;
-                	}
-			*(*(mel_spec_arr+i)+m-1) = mel_scale;
+		for(int m=0; m<n_mels; m++){
+			double mel_scale = 0;
+			for(int j=0; j<n_fft; j++){
+				mel_scale += *(*(stft_arr+i)+j)*(*(*(filterbank+m)+j));
+			}
+			*(*(mel_spec_arr+i)+m) = mel_scale;
 		}
 	}
 
 	return mel_spec_arr;
 
+}
+
+double** filterbank_gen(double* filterbin, int n_mels, int n_ffts){
+	double **filterbank = (double**)malloc(n_mels*sizeof(double*));
+	for(int i=0; i<n_mels+2; i++){
+		*(filterbank+i) = (double*)malloc(n_ffts*sizeof(double));
+	}
+	for(int i=0; i<n_mels+2; i++){
+		for(int j=0; j<n_ffts; j++){
+			*(*(filterbank+i)+j) = double(0);
+		}
+	}
+
+	for(int m=1; m<n_mels+1; m++){
+		int f_min = *(filterbin+m-1);
+		int f_mid = *(filterbin+m);
+		int f_max = *(filterbin+m+1);
+
+		for(int k=f_min; k<f_mid; k++){
+			*(*(filterbank+m-1)+k) = (k - *(filterbin+m-1))/(*(filterbin+m) - *(filterbin+m-1));
+		}
+
+		for(int k=f_mid; k<f_max; k++){
+			*(*(filterbank+m-1)+k) = (*(filterbin+m+1) - k)/(*(filterbin+m+1) - *(filterbin+m));
+		}
+	}
+
+	return filterbank;
+
+}
+
+double** power_to_db(double** mel_spec, int num_of_ffts, int n_mels){
+	double ref = INT_MIN;
+	double min_double = DBL_MIN;
+
+	// Find the reference number (the max number in mel_spec array)
+	for(int i=0; i<num_of_ffts; i++){
+		for(int j=0; j<n_mels; j++){
+			if(*(*(mel_spec+i)+j)>ref){
+				ref = *(*(mel_spec+i)+j);
+			}else{
+				ref = ref;
+			}
+		}
+	}
+
+	for(int i=0; i<num_of_ffts; i++){
+		for(int j=0; j<n_mels; j++){
+			*(*(mel_spec+i)+j) = 10*log10(std::max(min_double, *(*(mel_spec+i)+j)));
+			*(*(mel_spec+i)+j) -= 10*log10(std::max(min_double, ref));
+		}
+	}
+
+	return mel_spec;
 }
 
 std::complex<double>* fft(std::complex<double> *wave, int size){

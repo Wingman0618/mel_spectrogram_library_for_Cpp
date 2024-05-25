@@ -112,6 +112,7 @@ int main(){
 	cout<<"-------------------------"<<endl;
 
 	// Check mel spectrogram
+	cout<<"-------------------------"<<endl;
 	cout<<"mel spectrogram check: "<<endl;
 
 	double** mel_spectrogram = mel_spec(new_data, n, window_size, step, 40, 16000);
@@ -127,6 +128,19 @@ int main(){
         cout<<mel_spectrogram[59][39]<<endl;
         cout<<mel_spectrogram[59][40]<<endl;
 	cout<<"-------------------------"<<endl;
+
+	// Check power to db
+	cout<<"-------------------------"<<endl;
+	cout<<"Power to db: "<<endl;
+
+	mel_spectrogram = power_to_db(mel_spectrogram, 60, 40);
+        for(int i=0; i<num_of_fft; i++){
+                for(int j=0; j<5; j++){
+                        cout<<*(*(mel_spectrogram+i)+j)<<" ";
+                }
+                cout<<endl;
+                cout<<"-------------------------"<<endl;
+        }
 
 	free(new_data);
 	free(dft_audio);
