@@ -260,6 +260,53 @@ double** power_to_db(double** mel_spec, int num_of_ffts, int n_mels){
 	return mel_spec;
 }
 
+double** amplitude_to_db(double** mel_spec, int num_of_ffts, int n_mels, int top_db){
+        double ref = INT_MIN;
+        double min_double = DBL_MIN;
+
+        // Find the reference number (the max number in mel_spec array)
+        for(int i=0; i<num_of_ffts; i++){
+                for(int j=0; j<n_mels; j++){
+                        if(*(*(mel_spec+i)+j)>ref){
+                                ref = *(*(mel_spec+i)+j);
+                        }else{
+                                ref = ref;
+                        }
+                }
+        }
+	std::cout<<ref<<std::endl;
+	ref = pow(ref, 2);
+
+	// Convert amplitude to db
+        for(int i=0; i<num_of_ffts; i++){
+                for(int j=0; j<n_mels; j++){
+			*(*(mel_spec+i)+j) = pow(*(*(mel_spec+i)+j), 2);
+                        *(*(mel_spec+i)+j) = 10*log10(std::max(min_double, *(*(mel_spec+i)+j)));
+                        *(*(mel_spec+i)+j) -= 10*log10(std::max(min_double, ref));
+                }
+        }
+
+	double max_ = INT_MIN;
+        for(int i=0; i<num_of_ffts; i++){
+                for(int j=0; j<n_mels; j++){
+			if(*(*(mel_spec+i)+j)>max_){
+                                max_ = *(*(mel_spec+i)+j);
+                        }else{
+                                max_ = max_;
+                        }
+                }
+        }
+	std::cout<<max_<<std::endl;
+        for(int i=0; i<num_of_ffts; i++){
+                for(int j=0; j<n_mels; j++){
+			*(*(mel_spec+i)+j) = std::max(*(*(mel_spec+i)+j), (max_-top_db));
+                }
+        }
+
+        return mel_spec;
+
+}
+
 std::complex<double>* fft(std::complex<double> *wave, int size){
 	int n = size;
 	if(log2(n) != (float)(int)log2(n)){

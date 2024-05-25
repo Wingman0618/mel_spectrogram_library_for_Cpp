@@ -142,6 +142,20 @@ int main(){
                 cout<<"-------------------------"<<endl;
         }
 
+        // Check amplitude to db
+        cout<<"-------------------------"<<endl;
+        cout<<"Amplitude to db: "<<endl;
+	double** mel_spectrogram_new = mel_spec(new_data, n, window_size, step, 40, 16000);
+
+        mel_spectrogram_new = amplitude_to_db(mel_spectrogram_new, 60, 40, 80);
+        for(int i=0; i<num_of_fft; i++){
+                for(int j=0; j<5; j++){
+                        cout<<*(*(mel_spectrogram_new+i)+j)<<" ";
+                }
+                cout<<endl;
+                cout<<"-------------------------"<<endl;
+	}
+
 	free(new_data);
 	free(dft_audio);
 	free(weight);

@@ -19,4 +19,6 @@ double** filterbank_gen(double *filterbin, int n_mels, int n_ffts);
 
 double** power_to_db(double** mel_spec, int num_of_ffts, int n_mels);
 
+double** amplitude_to_db(double** mel_spec, int num_of_ffts, int n_mels, int top_db);
+
 std::complex<double>* fft(std::complex<double> *wave, int size);
