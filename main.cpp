@@ -33,8 +33,8 @@ int main(){
 
 	cout<<endl;
 
-	complex<double>* dft_complex = (complex<double>*)malloc(size*sizeof(complex<double>));
-	dft_complex = dft(y_output, size);
+//	complex<double>* dft_complex = (complex<double>*)malloc(size*sizeof(complex<double>));
+	complex<double>* dft_complex = dft(y_output, size);
 
 	cout<<"DFT without hamming---------------------"<<endl;
 	for(int i=0; i<size; i++){
